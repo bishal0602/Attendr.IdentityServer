@@ -6,7 +6,9 @@
 # Custom
 appsettings.json
 TestUsers.cs
+DataSeed.cs
 keys
+Migrations
 
 # User-specific files
 *.rsuser

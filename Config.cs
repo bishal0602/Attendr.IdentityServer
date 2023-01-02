@@ -11,6 +11,9 @@ public static class Config
         {
             new IdentityResources.OpenId(),
             new IdentityResources.Profile(),
+            new IdentityResource("phone", "Phone number", new []{"phone"}),
+            //new IdentityResource("email", "Email", new[]{"email"}),
+            new IdentityResources.Email(),
         };
 
     public static IEnumerable<ApiResource> ApiResources =>
@@ -27,6 +30,7 @@ public static class Config
     public static IEnumerable<ApiScope> ApiScopes =>
         new ApiScope[]
             {
+            //new ApiScope(IdentityServerConstants.LocalApi.ScopeName),
             new ApiScope("attendrapi.fullaccess")
             };
 
@@ -45,10 +49,14 @@ public static class Config
                     AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
                     AllowedScopes =
                     {
+                        //IdentityServerConstants.LocalApi.ScopeName,
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
+                        IdentityServerConstants.StandardScopes.Email,
                         "attendrapi.fullaccess",
+                        "phone",
                     },
+
 
                     AllowOfflineAccess = true,
                     UpdateAccessTokenClaimsOnRefresh = true,
