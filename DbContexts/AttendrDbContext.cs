@@ -15,7 +15,7 @@ namespace Attendr.IdentityServer.DbContexts
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            DataSeed.Seed(modelBuilder);
+            //DataSeed.Seed(modelBuilder);
             base.OnModelCreating(modelBuilder);
         }
     }

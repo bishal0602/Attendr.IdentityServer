@@ -1,4 +1,5 @@
 using Attendr.IdentityServer.DbContexts;
+using Attendr.IdentityServer.Models.Email;
 using Attendr.IdentityServer.Services;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Validation;
@@ -11,6 +12,8 @@ internal static class HostingExtensions
 {
     public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
     {
+        //IHttpContextAccessor register
+        builder.Services.AddHttpContextAccessor();
 
         builder.Services.AddControllers();
         //builder.Services.AddLocalApiAuthentication();
@@ -21,9 +24,11 @@ internal static class HostingExtensions
         });
 
         builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddAutoMapper(typeof(Program));
 
-
-
+        var emailConfig = builder.Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
+        builder.Services.AddSingleton(emailConfig);
+        builder.Services.AddScoped<IEmailSender, EmailSender>();
 
         builder.Services.AddIdentityServer(options =>
             {

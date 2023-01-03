@@ -23,12 +23,12 @@ namespace Attendr.IdentityServer.Services
                 var user = await _userRepository.FindUserByUserNameAsync(context.UserName);
                 if (user != null)
                 {
-                    //check if password match - remember to hash password if stored as hash in db
+                    // TODO: Hash Password
                     if (user.Password == context.Password)
                     {
                         //set the result
                         context.Result = new GrantValidationResult(
-                            subject: user.UserName.ToString(),
+                            subject: user.Username.ToString(),
                             authenticationMethod: "custom",
                             claims: _userRepository.GetClaimsForUser(user));
 

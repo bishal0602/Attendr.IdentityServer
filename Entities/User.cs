@@ -13,7 +13,7 @@ namespace Attendr.IdentityServer.Entities
 
         [Required]
         [MaxLength(200)]
-        public string UserName { get; set; }
+        public string Username { get; set; }
 
         [MaxLength(200)]
         public string Password { get; set; }
@@ -29,9 +29,9 @@ namespace Attendr.IdentityServer.Entities
         [Required]
         public bool Active { get; set; }
 
-        //[MaxLength(200)]
-        //public string SecurityCode { get; set; }
-        //public DateTime SecurityCodeExpirationDate { get; set; }
+        [MaxLength(200)]
+        public string VerificationCode { get; set; }
+        public DateTime VerificationCodeExpirationDate { get; set; }
 
 
         [ConcurrencyCheck]
