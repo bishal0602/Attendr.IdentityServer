@@ -16,13 +16,14 @@ namespace Attendr.IdentityServer.Services
 
         public async Task GetProfileDataAsync(ProfileDataRequestContext context)
         {
+            var identityClaims = ((System.Security.Claims.ClaimsIdentity)context.Subject.Identity).Claims;
             try
             {
                 //depending on the scope accessing the user data.
-                if (!string.IsNullOrEmpty(context.Subject.Identity.Name))
+                var userId = identityClaims.FirstOrDefault(c => c.Type == "user_id");
+                if (!string.IsNullOrEmpty(userId?.Value))
                 {
-                    //get user from db (in my case this is by email)
-                    var user = await _userRepository.FindUserByUserNameAsync(context.Subject.Identity.Name);
+                    var user = await _userRepository.FindUserByUserIdAsync(userId?.Value);
 
                     if (user != null)
                     {
@@ -34,14 +35,13 @@ namespace Attendr.IdentityServer.Services
                 }
                 else
                 {
-                    //get subject from context (this was set ResourceOwnerPasswordValidator.ValidateAsync),
-                    //where and subject was set to my user id.
-                    var userId = context.Subject.Claims.FirstOrDefault(x => x.Type == "sub");
+                    //get subject from context and subject was set to username
+                    var username = identityClaims.FirstOrDefault(c => c.Type == "sub");
 
-                    if (!string.IsNullOrEmpty(userId?.Value) && long.Parse(userId.Value) > 0)
+                    if (!string.IsNullOrEmpty(username.Value))
                     {
                         //get user from db (find user by username)
-                        var user = await _userRepository.FindUserByUserNameAsync(userId.Value);
+                        var user = await _userRepository.FindUserByUserNameAsync(username.Value);
 
                         // issue the claims for the user
                         if (user != null)
@@ -65,12 +65,11 @@ namespace Attendr.IdentityServer.Services
         {
             try
             {
-                //get subject from context (set in ResourceOwnerPasswordValidator.ValidateAsync),
-                var userId = context.Subject.Claims.FirstOrDefault(x => x.Type == "user_id");
+                var userName = ((System.Security.Claims.ClaimsIdentity)context.Subject.Identity).Claims.FirstOrDefault(c => c.Type == "sub");
 
-                if (!string.IsNullOrEmpty(userId?.Value))
+                if (!string.IsNullOrEmpty(userName?.Value))
                 {
-                    var user = await _userRepository.FindUserByUserIdAsync(userId.Value);
+                    var user = await _userRepository.GetUserByUsernameAsync(userName.Value);
 
                     if (user != null)
                     {
@@ -81,7 +80,6 @@ namespace Attendr.IdentityServer.Services
             catch (Exception ex)
             {
                 Log.Error($"Error checking Active status of {context.Subject.Identity.Name}:\n{ex}");
-                //handle error logging
             }
         }
     }

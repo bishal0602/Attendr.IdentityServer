@@ -23,6 +23,11 @@ namespace Attendr.IdentityServer.Services
                 var user = await _userRepository.FindUserByUserNameAsync(context.UserName);
                 if (user != null)
                 {
+                    if (!user.Active)
+                    {
+                        context.Result = new GrantValidationResult(TokenRequestErrors.InvalidGrant, "Account not verified.");
+                        return;
+                    }
                     // TODO: Hash Password
                     if (user.Password == context.Password)
                     {
@@ -47,16 +52,5 @@ namespace Attendr.IdentityServer.Services
                 context.Result = new GrantValidationResult(TokenRequestErrors.InvalidGrant, "Invalid username or password");
             }
         }
-
-        //build claims array from user data
-        //public static Claim[] GetUserClaims(User user)
-        //{
-        //    var userClaims = new List<Claim>();
-        //    foreach (var claim in user.Claims)
-        //    {
-        //        userClaims.Add(new Claim(claim.Type, claim.Value));
-        //    }
-        //    return userClaims.ToArray();
-        //}
     }
 }

@@ -57,7 +57,7 @@ public static class Config
                         "phone",
                     },
 
-
+                    AlwaysIncludeUserClaimsInIdToken= true,
                     AllowOfflineAccess = true,
                     UpdateAccessTokenClaimsOnRefresh = true,
                 }

@@ -7,7 +7,7 @@
     {
         private static readonly List<string> _allowedEmails = new List<string>()
         {
-            // appreoved emails
+            //approved emails
         };
         /// <summary>
         /// Checks whether the email is approved or not

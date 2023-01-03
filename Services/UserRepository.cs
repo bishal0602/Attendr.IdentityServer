@@ -1,6 +1,7 @@
 ﻿using Attendr.IdentityServer.DbContexts;
 using Attendr.IdentityServer.Entities;
 using Attendr.IdentityServer.Helpers;
+using IdentityModel;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using static Attendr.IdentityServer.Helpers.VerificationHelper;
@@ -30,8 +31,11 @@ namespace Attendr.IdentityServer.Services
         {
             // making sure user has claims included
             var userWithClaims = _context.Users.Include(u => u.Claims).First(u => u.Id == user.Id);
-            var userClaims = new List<Claim>();
-            userClaims.Add(new Claim("user_id", userWithClaims.Id.ToString()));
+            var userClaims = new List<Claim>
+            {
+                new Claim("user_id", userWithClaims.Id.ToString()),
+                new Claim(JwtClaimTypes.Email, userWithClaims.Email),
+            };
             foreach (var claim in userWithClaims.Claims)
             {
                 userClaims.Add(new Claim(claim.Type, claim.Value));
