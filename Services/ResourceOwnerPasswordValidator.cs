@@ -2,6 +2,7 @@
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Validation;
 using IdentityModel;
+using Microsoft.AspNetCore.Identity;
 using Serilog;
 using System.Security.Claims;
 
@@ -10,10 +11,12 @@ namespace Attendr.IdentityServer.Services
     public class ResourceOwnerPasswordValidator : IResourceOwnerPasswordValidator
     {
         private readonly IUserRepository _userRepository;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public ResourceOwnerPasswordValidator(IUserRepository userRepository)
+        public ResourceOwnerPasswordValidator(IUserRepository userRepository, IPasswordHasher<User> passwordHasher)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
         }
         public async Task ValidateAsync(ResourceOwnerPasswordValidationContext context)
         {
@@ -28,14 +31,17 @@ namespace Attendr.IdentityServer.Services
                         context.Result = new GrantValidationResult(TokenRequestErrors.InvalidGrant, "Account not verified.");
                         return;
                     }
-                    // TODO: Hash Password
-                    if (user.Password == context.Password)
+
+                    var verifyPassword = _passwordHasher.VerifyHashedPassword(user, user.Password, context.Password);
+
+                    if (verifyPassword == PasswordVerificationResult.Success)
                     {
                         //set the result
                         context.Result = new GrantValidationResult(
                             subject: user.Username.ToString(),
                             authenticationMethod: "custom",
-                            claims: _userRepository.GetClaimsForUser(user));
+                            claims: await GetClaimsAsync(user.Username.ToString())
+                            );
 
                         return;
                     }
@@ -51,6 +57,12 @@ namespace Attendr.IdentityServer.Services
                 Log.Error($"Validation error {context.UserName}:\n{ex.Message}");
                 context.Result = new GrantValidationResult(TokenRequestErrors.InvalidGrant, "Invalid username or password");
             }
+        }
+
+        private async Task<IEnumerable<Claim>> GetClaimsAsync(string username)
+        {
+            var userClaims = await _userRepository.GetClaimsByUsernameAsync(username);
+            return userClaims.Select(c => new Claim(c.Type, c.Value)).ToList();
         }
     }
 }

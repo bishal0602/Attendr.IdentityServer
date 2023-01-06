@@ -11,9 +11,10 @@ public static class Config
         {
             new IdentityResources.OpenId(),
             new IdentityResources.Profile(),
-            new IdentityResource("phone", "Phone number", new []{"phone"}),
+            //new IdentityResource("phone", "Phone number", new []{"phone"}),
             //new IdentityResource("email", "Email", new[]{"email"}),
             new IdentityResources.Email(),
+            new IdentityResource("roles", "User roles", new []{"role"}),
         };
 
     public static IEnumerable<ApiResource> ApiResources =>
@@ -54,7 +55,8 @@ public static class Config
                         IdentityServerConstants.StandardScopes.Profile,
                         IdentityServerConstants.StandardScopes.Email,
                         "attendrapi.fullaccess",
-                        "phone",
+                        //"phone",
+                        "roles",
                     },
 
                     AlwaysIncludeUserClaimsInIdToken= true,

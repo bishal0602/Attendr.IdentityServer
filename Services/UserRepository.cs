@@ -2,6 +2,7 @@
 using Attendr.IdentityServer.Entities;
 using Attendr.IdentityServer.Helpers;
 using IdentityModel;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using static Attendr.IdentityServer.Helpers.VerificationHelper;
@@ -11,10 +12,12 @@ namespace Attendr.IdentityServer.Services
     public class UserRepository : IUserRepository
     {
         private readonly AttendrDbContext _context;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public UserRepository(AttendrDbContext context)
+        public UserRepository(AttendrDbContext context, IPasswordHasher<User> passwordHasher)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
         }
         public async Task<User> FindUserByUserNameAsync(string userName)
         {
@@ -27,20 +30,29 @@ namespace Attendr.IdentityServer.Services
             return user;
         }
 
-        public Claim[] GetClaimsForUser(User user)
+        public async Task<IEnumerable<UserClaim>> GetClaimsByUsernameAsync(string username)
         {
-            // making sure user has claims included
-            var userWithClaims = _context.Users.Include(u => u.Claims).First(u => u.Id == user.Id);
-            var userClaims = new List<Claim>
+            if (string.IsNullOrEmpty(username))
             {
-                new Claim("user_id", userWithClaims.Id.ToString()),
-                new Claim(JwtClaimTypes.Email, userWithClaims.Email),
-            };
-            foreach (var claim in userWithClaims.Claims)
-            {
-                userClaims.Add(new Claim(claim.Type, claim.Value));
+                throw new ArgumentNullException($"'{nameof(username)}' cannot be null or empty.", nameof(username));
             }
-            return userClaims.ToArray();
+
+            return await _context.Claims.Where(c => c.User.Username == username).ToListAsync();
+
+
+            //// making sure user has claims included
+            //var userWithClaims = _context.Users.Include(u => u.Claims).First(u => u.Id == user.Id);
+            //var userClaims = new List<Claim>
+            //{
+            //    new Claim("user_id", userWithClaims.Id.ToString()),
+            //    new Claim(JwtClaimTypes.Email, userWithClaims.Email),
+            //};
+            //foreach (var claim in userWithClaims.Claims)
+            //{
+            //    userClaims.Add(new Claim(claim.Type, claim.Value));
+            //}
+            //return userClaims.ToArray();
+
         }
 
         public async Task<bool> IsEmailAlreadyInUseAsync(string email)
@@ -57,7 +69,16 @@ namespace Attendr.IdentityServer.Services
             user.Active = false;
             user.Email = user.Email.Trim().ToLower();
             user.Username = user.Username.Trim().ToLower();
-            // TODO: generate securitycode
+
+            // hashing password
+            user.Password = _passwordHasher.HashPassword(user, user.Password);
+
+            // setting user claims
+            user.Claims.Add(new UserClaim(JwtClaimTypes.Email, user.Email));
+            user.Claims.Add(new UserClaim("role", "student"));
+            ;
+
+            // verification
             var token = Guid.NewGuid().ToString();
             user.VerificationCode = token;
             user.VerificationCodeExpirationDate = DateTime.UtcNow.AddMinutes(5);
@@ -111,12 +132,14 @@ namespace Attendr.IdentityServer.Services
             return VerificationStatusCodes.Success;
 
         }
-
+        public async Task AddClaimAsync(string username, string type, string value)
+        {
+            var user = await GetUserByUsernameAsync(username);
+            user.Claims.Add(new UserClaim(type, value));
+        }
         public async Task<bool> SaveAsync()
         {
             return (await _context.SaveChangesAsync() >= 0);
         }
-
-
     }
 }

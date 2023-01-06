@@ -17,7 +17,8 @@ namespace Attendr.IdentityServer.Services
 
         Task<User> FindUserByUserNameAsync(string userName);
         Task<User> FindUserByUserIdAsync(string userId);
-        Claim[] GetClaimsForUser(User user);
+        Task<IEnumerable<UserClaim>> GetClaimsByUsernameAsync(string value);
+        Task AddClaimAsync(string username, string type, string value);
 
 
 

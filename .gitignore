@@ -9,6 +9,7 @@ TestUsers.cs
 DataSeed.cs
 keys
 Migrations
+AdminController.cs
 
 # User-specific files
 *.rsuser

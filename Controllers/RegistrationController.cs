@@ -35,20 +35,21 @@ namespace Attendr.IdentityServer.Controllers
                 return BadRequest("Sorry, this email is not approved by the application");
             }
 
-            if (await _userRepository.ExistsUsernameAsync(user.Username))
-            {
-                return BadRequest("Username is already taken!");
-            }
-
             if (await _userRepository.IsEmailAlreadyInUseAsync(user.Email))
             {
                 if (await _userRepository.IsAccountActive(user.Email))
                 {
                     return BadRequest("Account is already activated!");
                 }
-                // override account if it is in use by account that is not verified
-                await _userRepository.RemoveUserAsync(user.Email);
             }
+
+            if (await _userRepository.ExistsUsernameAsync(user.Username))
+            {
+                return BadRequest("Username is already taken!");
+            }
+
+            // override account if it is in use by account that is not verified
+            await _userRepository.RemoveUserAsync(user.Email);
 
             var userToAddToDb = _mapper.Map<Entities.User>(user);
             await _userRepository.CreateUserAsync(userToAddToDb);

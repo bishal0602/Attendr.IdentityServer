@@ -1,8 +1,10 @@
 using Attendr.IdentityServer.DbContexts;
+using Attendr.IdentityServer.Entities;
 using Attendr.IdentityServer.Models.Email;
 using Attendr.IdentityServer.Services;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Validation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -14,6 +16,8 @@ internal static class HostingExtensions
     {
         //IHttpContextAccessor register
         builder.Services.AddHttpContextAccessor();
+        // Password Hasher
+        builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
         builder.Services.AddControllers();
         //builder.Services.AddLocalApiAuthentication();
@@ -35,7 +39,8 @@ internal static class HostingExtensions
                 // https://docs.duendesoftware.com/identityserver/v6/fundamentals/resources/api_scopes#authorization-based-on-scopes
                 options.EmitStaticAudienceClaim = true;
 
-                //options.Discovery.CustomEntries.Add("custom_api", "~/account/activate");
+                //options.Discovery.CustomEntries.Add("registration_endpoint", "~/account/register");
+                //options.Discovery.CustomEntries.Add("verification_endpoint", "~/account/verify");
             })
             .AddInMemoryIdentityResources(Config.IdentityResources)
             .AddInMemoryApiScopes(Config.ApiScopes)

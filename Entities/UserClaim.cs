@@ -22,5 +22,11 @@ namespace Attendr.IdentityServer.Entities
         public Guid UserId { get; set; }
 
         public User User { get; set; }
+
+        public UserClaim(string type, string value)
+        {
+            Type = type;
+            Value = value;
+        }
     }
 }

@@ -2,6 +2,7 @@
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Validation;
 using Serilog;
+using System.Security.Claims;
 
 namespace Attendr.IdentityServer.Services
 {
@@ -16,42 +17,47 @@ namespace Attendr.IdentityServer.Services
 
         public async Task GetProfileDataAsync(ProfileDataRequestContext context)
         {
-            var identityClaims = ((System.Security.Claims.ClaimsIdentity)context.Subject.Identity).Claims;
+            var identityClaims = ((ClaimsIdentity)context.Subject.Identity).Claims;
             try
             {
-                //depending on the scope accessing the user data.
-                var userId = identityClaims.FirstOrDefault(c => c.Type == "user_id");
-                if (!string.IsNullOrEmpty(userId?.Value))
-                {
-                    var user = await _userRepository.FindUserByUserIdAsync(userId?.Value);
+                var subject = identityClaims.FirstOrDefault(c => c.Type == "sub");
+                // subject is username in our case
+                var userClaims = await _userRepository.GetClaimsByUsernameAsync(subject.Value);
+                context.AddRequestedClaims(userClaims.Select(c => new Claim(c.Type, c.Value)).ToList());
 
-                    if (user != null)
-                    {
-                        var claims = _userRepository.GetClaimsForUser(user);
+                ////depending on the scope accessing the user data.
+                //var userId = identityClaims.FirstOrDefault(c => c.Type == "user_id");
+                //if (!string.IsNullOrEmpty(userId?.Value))
+                //{
+                //    var user = await _userRepository.FindUserByUserIdAsync(userId?.Value);
 
-                        //set issued claims to return
-                        context.IssuedClaims = claims.Where(x => context.RequestedClaimTypes.Contains(x.Type)).ToList();
-                    }
-                }
-                else
-                {
-                    //get subject from context and subject was set to username
-                    var username = identityClaims.FirstOrDefault(c => c.Type == "sub");
+                //    if (user != null)
+                //    {
+                //        var claims = _userRepository.GetClaimsForUser(user);
 
-                    if (!string.IsNullOrEmpty(username.Value))
-                    {
-                        //get user from db (find user by username)
-                        var user = await _userRepository.FindUserByUserNameAsync(username.Value);
+                //        //set issued claims to return
+                //        context.IssuedClaims = claims.Where(x => context.RequestedClaimTypes.Contains(x.Type)).ToList();
+                //    }
+                //}
+                //else
+                //{
+                //    //get subject from context and subject was set to username
+                //    var username = identityClaims.FirstOrDefault(c => c.Type == "sub");
 
-                        // issue the claims for the user
-                        if (user != null)
-                        {
-                            var claims = _userRepository.GetClaimsForUser(user);
+                //    if (!string.IsNullOrEmpty(username.Value))
+                //    {
+                //        //get user from db (find user by username)
+                //        var user = await _userRepository.FindUserByUserNameAsync(username.Value);
 
-                            context.IssuedClaims = claims.Where(x => context.RequestedClaimTypes.Contains(x.Type)).ToList();
-                        }
-                    }
-                }
+                //        // issue the claims for the user
+                //        if (user != null)
+                //        {
+                //            var claims = _userRepository.GetClaimsForUser(user);
+
+                //            context.IssuedClaims = claims.Where(x => context.RequestedClaimTypes.Contains(x.Type)).ToList();
+                //        }
+                //}
+                //}
             }
             catch (Exception ex)
             {
