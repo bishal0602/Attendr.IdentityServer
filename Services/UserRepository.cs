@@ -93,10 +93,15 @@ namespace Attendr.IdentityServer.Services
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Username.Trim().ToLower() == username.Trim().ToLower());
         }
-        public async Task RemoveUserAsync(string email)
+        public async Task RemoveUserByEmailAsync(string email)
         {
             var user = await GetUserByEmailAsync(email);
-            _context.Remove(user);
+            if (user is null)
+            {
+                throw new Exception($"User cannot be removed because user with email {email} does not exist.");
+            }
+            _context.Users.Remove(user);
+
         }
 
         public async Task<bool> ExistsUsernameAsync(string username)

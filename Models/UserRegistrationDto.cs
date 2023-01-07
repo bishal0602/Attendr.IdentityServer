@@ -13,9 +13,6 @@ namespace Attendr.IdentityServer.Models
         [Required]
         [MaxLength(200)]
         public string Password { get; set; }
-        [Required]
-        [MaxLength(200)]
-        public string ConfirmPassword { get; set; }
 
     }
 }

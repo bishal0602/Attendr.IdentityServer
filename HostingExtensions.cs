@@ -4,6 +4,7 @@ using Attendr.IdentityServer.Models.Email;
 using Attendr.IdentityServer.Services;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Validation;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -38,9 +39,6 @@ internal static class HostingExtensions
             {
                 // https://docs.duendesoftware.com/identityserver/v6/fundamentals/resources/api_scopes#authorization-based-on-scopes
                 options.EmitStaticAudienceClaim = true;
-
-                //options.Discovery.CustomEntries.Add("registration_endpoint", "~/account/register");
-                //options.Discovery.CustomEntries.Add("verification_endpoint", "~/account/verify");
             })
             .AddInMemoryIdentityResources(Config.IdentityResources)
             .AddInMemoryApiScopes(Config.ApiScopes)
@@ -50,6 +48,14 @@ internal static class HostingExtensions
 
         builder.Services.AddTransient<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidator>();
         builder.Services.AddTransient<IProfileService, ProfileService>();
+
+        //builder.Services.AddCors(options =>
+        //{
+        //    options.AddPolicy("CorsPolicy", builder =>
+        //        builder.AllowAnyOrigin()
+        //       .AllowAnyMethod()
+        //       .AllowAnyHeader());
+        //});
 
         return builder.Build();
     }
@@ -63,15 +69,20 @@ internal static class HostingExtensions
             app.UseDeveloperExceptionPage();
         }
 
-        // uncomment if you want to add a UI
-        //app.UseStaticFiles();
-        //app.UseRouting();
 
         app.UseIdentityServer();
 
-        // uncomment if you want to add a UI
-        //app.UseAuthorization();
-        //app.MapRazorPages().RequireAuthorization();
+        app.UseExceptionHandler(c => c.Run(async context =>
+        {
+            var exception = context.Features
+                .Get<IExceptionHandlerPathFeature>()
+                .Error;
+            var response = new { error = exception.Message };
+            await context.Response.WriteAsJsonAsync(response);
+        }));
+
+        //app.UseCors();
+
         app.MapControllers();
 
         return app;

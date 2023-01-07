@@ -48,7 +48,7 @@ namespace Attendr.IdentityServer.Services
                 catch
                 {
                     Log.Error($"Error sending mail to {mailMessage.To}");
-                    throw new Exception("Cannot send mail");
+                    throw new Exception("Sorry! Something went wrong and verification email could not be sent.");
                 }
                 finally
                 {
@@ -71,10 +71,10 @@ namespace Attendr.IdentityServer.Services
                     Log.Information($"Verification link sent to {mailMessage.To}:\n{mailMessage.TextBody}");
 
                 }
-                catch
+                catch (Exception ex)
                 {
-                    Log.Error($"Error sending mail to {mailMessage.To}");
-                    throw new Exception("Cannot send mail");
+                    Log.Error($"Following error happened while sending mail to {mailMessage.To}:\n{ex.Message}");
+                    throw new Exception("Sorry! Something went wrong and verification email could not be sent.");
                 }
                 finally
                 {

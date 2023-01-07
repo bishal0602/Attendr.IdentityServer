@@ -11,7 +11,7 @@ namespace Attendr.IdentityServer.Services
         Task<User> GetUserByEmailAsync(string email);
         Task<User> GetUserByUsernameAsync(string username);
         Task CreateUserAsync(User user);
-        Task RemoveUserAsync(string email);
+        Task RemoveUserByEmailAsync(string email);
         Task<bool> ExistsUsernameAsync(string username);
         Task<VerificationHelper.VerificationStatusCodes> VerifyUserAsync(string username, string verificationCode);
 

@@ -32,46 +32,38 @@ namespace Attendr.IdentityServer.Controllers
 
             if (!EmailHelper.IsEmailApproved(user.Email))
             {
-                return BadRequest("Sorry, this email is not approved by the application");
+                return BadRequest(new ErrorModel("Sorry, this email is not approved by the application"));
             }
 
-            if (await _userRepository.IsEmailAlreadyInUseAsync(user.Email))
+            if (await _userRepository.IsAccountActive(user.Email))
             {
-                if (await _userRepository.IsAccountActive(user.Email))
-                {
-                    return BadRequest("Account is already activated!");
-                }
+                return BadRequest(new ErrorModel("Account is already activated!"));
             }
 
             if (await _userRepository.ExistsUsernameAsync(user.Username))
             {
-                return BadRequest("Username is already taken!");
+                return BadRequest(new ErrorModel("Username is already taken!"));
             }
 
-            // override account if it is in use by account that is not verified
-            await _userRepository.RemoveUserAsync(user.Email);
+            if (await _userRepository.IsEmailAlreadyInUseAsync(user.Email))
+            {
+                // override account if email is in use by account that is not verified
+                await _userRepository.RemoveUserByEmailAsync(user.Email);
+            }
 
             var userToAddToDb = _mapper.Map<Entities.User>(user);
             await _userRepository.CreateUserAsync(userToAddToDb);
             await _userRepository.SaveAsync();
 
             // Verification Mail
-            try
-            {
-                var request = _httpContextAccessor.HttpContext!.Request;
-                string baseUrl = $"{request.Scheme}://{request.Host}";
-                string verificationUrl = EmailHelper.CreateVerificationUrl(baseUrl, userToAddToDb.Username, userToAddToDb.VerificationCode);
+            var request = _httpContextAccessor.HttpContext!.Request;
+            string baseUrl = $"{request.Scheme}://{request.Host}";
+            string verificationUrl = EmailHelper.CreateVerificationUrl(baseUrl, userToAddToDb.Username, userToAddToDb.VerificationCode);
 
-                var message = new Message(new string[] { userToAddToDb.Email }, "Verification Test", verificationUrl); // TODO: Update content and subject
-                await _emailSender.SendEmailAsync(message);
+            var message = new Message(new string[] { userToAddToDb.Email }, "Verification Test", verificationUrl); // TODO: Update content and subject
+            await _emailSender.SendEmailAsync(message);
 
-                return Ok("Account has been succesfully registered. Check you email to activate account!");
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Sorry! Something went wrong and verification email could not be sent.");
-            }
-
+            return Ok("Account has been succesfully registered. Check your email to activate account!");
 
         }
     }
