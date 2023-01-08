@@ -58,7 +58,7 @@ public static class Config
                         //"phone",
                         "roles",
                     },
-
+                    AlwaysSendClientClaims= true,
                     AlwaysIncludeUserClaimsInIdToken= true,
                     AllowOfflineAccess = true,
                     UpdateAccessTokenClaimsOnRefresh = true,

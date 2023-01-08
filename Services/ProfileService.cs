@@ -2,6 +2,7 @@
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Validation;
 using Serilog;
+using System.Linq;
 using System.Security.Claims;
 
 namespace Attendr.IdentityServer.Services
@@ -23,7 +24,8 @@ namespace Attendr.IdentityServer.Services
                 var subject = identityClaims.FirstOrDefault(c => c.Type == "sub");
                 // subject is username in our case
                 var userClaims = await _userRepository.GetClaimsByUsernameAsync(subject.Value);
-                context.AddRequestedClaims(userClaims.Select(c => new Claim(c.Type, c.Value)).ToList());
+                context.IssuedClaims = userClaims.Select(c => new Claim(c.Type, c.Value)).ToList();
+                //context.AddRequestedClaims(userClaims.Select(c => new Claim(c.Type, c.Value)).ToList());
 
                 ////depending on the scope accessing the user data.
                 //var userId = identityClaims.FirstOrDefault(c => c.Type == "user_id");

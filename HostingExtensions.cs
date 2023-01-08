@@ -1,5 +1,6 @@
 using Attendr.IdentityServer.DbContexts;
 using Attendr.IdentityServer.Entities;
+using Attendr.IdentityServer.Models;
 using Attendr.IdentityServer.Models.Email;
 using Attendr.IdentityServer.Services;
 using Duende.IdentityServer.Services;
@@ -42,6 +43,7 @@ internal static class HostingExtensions
             })
             .AddInMemoryIdentityResources(Config.IdentityResources)
             .AddInMemoryApiScopes(Config.ApiScopes)
+            .AddInMemoryApiResources(Config.ApiResources)
             .AddInMemoryClients(Config.Clients)
              .AddProfileService<ProfileService>();
         //.AddTestUsers(TestUsers.Users);
@@ -77,7 +79,7 @@ internal static class HostingExtensions
             var exception = context.Features
                 .Get<IExceptionHandlerPathFeature>()
                 .Error;
-            var response = new { error = exception.Message };
+            var response = new ErrorModel(exception.Message);
             await context.Response.WriteAsJsonAsync(response);
         }));
 
