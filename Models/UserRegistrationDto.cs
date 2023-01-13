@@ -12,6 +12,7 @@ namespace Attendr.IdentityServer.Models
         public string Email { get; set; }
         [Required]
         [MaxLength(200)]
+        [MinLength(6)]
         public string Password { get; set; }
 
     }

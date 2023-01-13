@@ -37,7 +37,7 @@ namespace Attendr.IdentityServer.Controllers
 
             if (await _userRepository.IsAccountActive(user.Email))
             {
-                return BadRequest(new ErrorModel("Account is already activated!"));
+                return BadRequest(new ErrorModel("Account is already registered!"));
             }
 
             if (await _userRepository.ExistsUsernameAsync(user.Username))
@@ -63,7 +63,7 @@ namespace Attendr.IdentityServer.Controllers
             var message = new Message(new string[] { userToAddToDb.Email }, "Verification Test", verificationUrl); // TODO: Update content and subject
             await _emailSender.SendEmailAsync(message);
 
-            return Ok("Account has been succesfully registered. Check your email to activate account!");
+            return Ok(new { message = "Account has been succesfully registered. Check your email to activate account!" });
 
         }
     }
